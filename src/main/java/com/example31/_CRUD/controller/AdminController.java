@@ -4,8 +4,10 @@ import com.example31._CRUD.model.User;
 import com.example31._CRUD.service.RoleServiceImpl;
 import com.example31._CRUD.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -23,27 +25,22 @@ public class AdminController {
     }
 
     @GetMapping
-    public String listOfUsers(Model model) {
+    public String listOfUsers(ModelMap model) {
         model.addAttribute("users", userServiceImpl.listOfUsers());
+        model.addAttribute("allRoles", roleServiceImpl.loadRoleFromDB());
+        model.addAttribute("newUser", new User());
         model.addAttribute("allRoles", roleServiceImpl.loadRoleFromDB());
         return "listOfUsers";
     }
 
-    @GetMapping("/{id}")
-    public String userById(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("user", userServiceImpl.userById(id));
-        return "userById";
-    }
-
-    @GetMapping("/new")
-    public String newUser(Model model) {
-        model.addAttribute("user", new User());
-
-        return "new";
+    @GetMapping(value = "/user")
+    public String user(Model model, Authentication aut) {
+        model.addAttribute("user", userServiceImpl.loadUserByUsername(aut.getName()));
+        return "userProfile";
     }
 
     @PostMapping()
-    public String createUser(@ModelAttribute("user") User user, @RequestParam(value = "user_roles", required = false) String[] rolesFromView) {
+    public String createUser(@ModelAttribute("newUser") User user, @RequestParam(value = "user_roles", required = false) String[] rolesFromView) {
         System.out.println(user);
         for (String s : rolesFromView) {
             if (s.equals("ROLE_ADMIN")) {
@@ -57,19 +54,21 @@ public class AdminController {
         return "redirect:/admin";
     }
 
-    @GetMapping("/{id}/edit")
-    public String editUser(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("user", userServiceImpl.userById(id));
-        return "edit";
-    }
-
     @PatchMapping("/{id}")
-    public String updateUser(@ModelAttribute("user") User user, @PathVariable("id") Long id) {
+    public String updateUser(@ModelAttribute("user") User user, @PathVariable("id") Long id, @RequestParam(value = "user_roles", required = false) String[] rolesFromView) {
         User userToUpdate = userServiceImpl.userById(id);
         userToUpdate.setUsername(user.getUsername());
         userToUpdate.setFullName(user.getFullName());
         userToUpdate.setEmail(user.getEmail());
         userToUpdate.setPassword(user.getPassword());
+        System.out.println(user);
+        for (String s : rolesFromView) {
+            if (s.equals("ROLE_ADMIN")) {
+                userToUpdate.addRoleToUser(roleServiceImpl.loadRoleFromDB().get(0));
+            } else if (s.equals("ROLE_USER")) {
+                userToUpdate.addRoleToUser(roleServiceImpl.loadRoleFromDB().get(1));
+            }
+        }
         userServiceImpl.updateUser(userToUpdate);
         return "redirect:/admin";
     }
