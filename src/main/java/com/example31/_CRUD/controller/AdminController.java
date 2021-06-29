@@ -10,9 +10,11 @@ import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
-@Controller
-@RequestMapping("/admin")
+
+@RestController
+@RequestMapping("api/")
 public class AdminController {
 
     private final UserServiceImpl userServiceImpl;
@@ -24,58 +26,28 @@ public class AdminController {
         this.roleServiceImpl = roleServiceImpl;
     }
 
-    @GetMapping
-    public String listOfUsers(ModelMap model) {
-        model.addAttribute("users", userServiceImpl.listOfUsers());
-        model.addAttribute("allRoles", roleServiceImpl.loadRoleFromDB());
-        model.addAttribute("newUser", new User());
-        model.addAttribute("allRoles", roleServiceImpl.loadRoleFromDB());
-        return "listOfUsers";
+    @GetMapping("/users")
+    public List<User> listOfUsers() {
+        return userServiceImpl.listOfUsers();
     }
 
-    @GetMapping(value = "/user")
-    public String user(Model model, Authentication aut) {
-        model.addAttribute("user", userServiceImpl.loadUserByUsername(aut.getName()));
-        return "userProfile";
+    @GetMapping("/{id}")
+    public User user(@PathVariable Long id) {
+       return userServiceImpl.userById(id);
     }
 
-    @PostMapping()
-    public String createUser(@ModelAttribute("newUser") User user, @RequestParam(value = "user_roles", required = false) String[] rolesFromView) {
-        System.out.println(user);
-        for (String s : rolesFromView) {
-            if (s.equals("ROLE_ADMIN")) {
-                user.addRoleToUser(roleServiceImpl.loadRoleFromDB().get(0));
-            } else if (s.equals("ROLE_USER")) {
-                user.addRoleToUser(roleServiceImpl.loadRoleFromDB().get(1));
-            }
-        }
-        userServiceImpl.saveUser(user);
-        System.out.println(user);
-        return "redirect:/admin";
+    @PostMapping("/addUser")
+    public User createUser(@RequestBody User user) {
+        return userServiceImpl.saveUser(user);
     }
 
-    @PatchMapping("/{id}")
-    public String updateUser(@ModelAttribute("user") User user, @PathVariable("id") Long id, @RequestParam(value = "user_roles", required = false) String[] rolesFromView) {
-        User userToUpdate = userServiceImpl.userById(id);
-        userToUpdate.setUsername(user.getUsername());
-        userToUpdate.setFullName(user.getFullName());
-        userToUpdate.setEmail(user.getEmail());
-        userToUpdate.setPassword(user.getPassword());
-        System.out.println(user);
-        for (String s : rolesFromView) {
-            if (s.equals("ROLE_ADMIN")) {
-                userToUpdate.addRoleToUser(roleServiceImpl.loadRoleFromDB().get(0));
-            } else if (s.equals("ROLE_USER")) {
-                userToUpdate.addRoleToUser(roleServiceImpl.loadRoleFromDB().get(1));
-            }
-        }
-        userServiceImpl.updateUser(userToUpdate);
-        return "redirect:/admin";
+    @PatchMapping("/edit")
+    public User updateUser(@RequestBody User user) {
+        return userServiceImpl.updateUser(user);
     }
 
-    @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable("id") Long id) {
+    @DeleteMapping("/delete/{id}")
+    public void deleteUser(@PathVariable("id") Long id) {
         userServiceImpl.deleteUser(id);
-        return "redirect:/admin";
     }
 }

@@ -21,8 +21,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void saveUser(User user) {
-        userRepository.save(user);
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
     @Override
@@ -32,8 +32,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public void updateUser(User user) {
-        userRepository.save(user);
+    public User updateUser(User user) {
+        return userRepository.save(user);
     }
 
     @Override
@@ -42,8 +42,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public User loadUserByUsername(String userName) {
-        return userRepository.findByUsername(userName);
+    public User loadUserByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
 }

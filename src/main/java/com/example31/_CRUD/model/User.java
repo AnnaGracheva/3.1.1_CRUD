@@ -35,12 +35,12 @@ public class User implements UserDetails {
 
     }
 
-    public User(String username, String fullName, String email, String password) { //Change it or not
+    public User(String username, String fullName, String email, String password, Set<Role> roles) { //Change it or not
         this.username = username;
         this.fullName = fullName;
         this.email = email;
         this.password = password;
-        this.roles = new HashSet<>();
+        this.roles = roles;
     }
 
     public Long getId() { return id; }
